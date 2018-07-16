@@ -1,0 +1,207 @@
+<%- include('../tpl/layout/head_top'); %>
+<!--<link rel="stylesheet" href="/Platform/css/home/index.css"/>-->
+
+<style type="text/css">
+  .user-detail{
+    width: 100%;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    margin:20px 0;
+  }
+  .row{
+    width: 1200px;
+    height: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+  }
+  form{
+    width: 400px;
+    height : 400px;
+    overflow: hidden;
+    position: absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    margin: auto;
+    padding:20px;
+    background: #fafafa;
+  }
+  .form-group{
+    height: 36px;
+    position: relative;
+  }
+  h3{
+    text-align: center;
+    font-size: 26px;
+  }
+  label{
+    display: inline-block;
+    width: 18%;
+    height: 100%;
+    line-height: 36px;
+    float: left;
+  }
+  input{
+    display: inline-block;
+    width: 80%;
+    float: right;
+    border-radius: 4px;
+    border:1px solid #D0D0D0;
+    padding: 0 10px;
+    height: 100%;
+    line-height: 36px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  #avatar{
+    opacity: 0;
+  }
+  #photo1Img{
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    left:20%;
+    cursor: pointer;
+  }
+
+</style>
+
+<%- include('../tpl/layout/head_bot'); %>
+<%- include('../tpl/layout/header'); %>
+
+<div class="user-detail">
+  <div class="row">
+    <form class="form-horizontal">
+      <div class="form-group">
+        <h3>用户详情</h3>
+      </div>
+      <div class="form-group">
+        <label>用户ID</label>
+        <input type="text" id="userId" disabled class="input-disabled">
+      </div>
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="userName">
+      </div>
+      <div class="form-group">
+        <label>用户密码</label>
+        <input type="text" id="password">
+      </div>
+      <div class="form-group">
+        <label>手机号</label>
+        <input type="text" id="mobile">
+      </div>
+      <div class="form-group">
+        <label>用户头像</label>
+        <!--<input type="file" id="avatar">-->
+        <!--<img src="" alt="">-->
+        <input id="avatar" name="file1" type="file" onchange="fileChange()">
+        <img src="" alt="" id="photo1Img">
+      </div>
+
+
+      <div class="form-group">
+        <input type="button" id="updateSub" value="修改提交">
+      </div>
+    </form>
+
+
+  </div>
+</div>
+<script type="application/javascript">
+  $('.user-detail').height( document.body.offsetHeight - 140 );
+  function fileChange() {
+    var cardPhoto = document.getElementById('avatar');
+    var files = cardPhoto.files[0];
+    var reader = new FileReader();
+    reader.onload = function (event) {
+      $('#photo1Img').attr('src',event.target.result);
+    };
+    reader.readAsDataURL(files);
+  }
+  $('#photo1Img').click(function () {
+    $('#avatar').click();
+  })
+  function GetRequest() {
+    var url = location.search; //获取url中"?"符后的字串
+    var theRequest = new Object();
+    if (url.indexOf("?") != -1) {
+      var str = url.substr(1);
+      var strs = str.split("&");
+      for(var i = 0; i < strs.length; i ++) {
+        theRequest[strs[i].split("=")[0]] = strs[i].split("=")[1];
+      }
+    }
+    return theRequest;
+  }
+  var Request = GetRequest();
+//  var url = '/api/user/detail/10001';
+  var url2 = '/api/user/list?user_id='+Request.id
+  $.ajax({
+    type : 'get',
+    url : url2,
+    dataType:'json',
+    success : function (res) {
+      var userInfo = {};
+      if(res.code == 2000){
+        userInfo = res.data.list[0];
+        $('#userId').val(userInfo.user_id);
+        $('#userName').val(userInfo.user_name);
+        $('#password').val(userInfo.password);
+        $('#mobile').val(userInfo.user_mobile);
+        $('#photo1Img').attr('src',userInfo.user_avatar);
+      }else {
+        layer.msg(res.msg);
+      }
+    },
+    error : function (err) {
+      console.log(err)
+    }
+  })
+  $('#updateSub').click(function () {
+    var formData = new FormData();
+    var cardPhoto1 = document.getElementById('avatar');
+    var files1 = cardPhoto1.files[0];
+    formData.append('user_id',$('#userId').val());
+    formData.append('user_name',$('#userName').val());
+    formData.append('password',$('#password').val());
+    formData.append('user_mobile',$('#mobile').val());
+
+    formData.append('file',files1);
+
+    
+    $.ajax({
+      type : 'post',
+      url : '/api/user/edit',
+      dataType : 'json',
+      data: formData,
+      cache: false,
+      processData: false,
+      contentType: false,
+      success:function (res) {
+        console.log(res);
+        if(res.code == 2000){
+          layer.msg(res.msg);
+          window.location.reload();
+        }else {
+          layer.msg(res.msg)
+        }
+      },
+      error : function (err) {
+        
+      }
+    })
+  });
+</script>
+
+
+<%- include('../tpl/layout/footer'); %>
+
+<!-- javascript -->
+
+<%- include('../tpl/layout/footer_script'); %>
+<%- include('../tpl/layout/foot'); %>
